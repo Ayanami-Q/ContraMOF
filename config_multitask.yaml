@@ -1,0 +1,95 @@
+batch_size: 128
+epochs: 100
+eval_every_n_epochs: 1
+save_every_n_epochs: 5
+fine_tune_from: runs_multiview/May13_13-02-44_multitask/checkpoints
+log_every_n_steps: 50
+gpu: cuda:0
+vocab_path: 'tokenizer/vocab_full.txt'
+cuda: true
+proj_dim: 128
+mask_atom_prob: 0.15
+coord_noise_std: 0.05
+momentum: 0.999
+grad_clip: 5.0
+
+# Periodicity
+use_periodic_augment: true
+use_supercell: true
+min_atoms_for_supercell: 10
+num_atom_types: 100
+
+# Acceleration
+use_amp: true
+grad_accum_steps: 1
+use_compile: false
+compile_mode: 'reduce-overhead'
+use_fused_optim: true
+prefetch_factor: 2
+persistent_workers: true
+
+# LR schedule
+warmup_epochs: 5
+min_lr: 0
+
+# BYOL predictor
+predictor_hidden: 64
+
+# Uncertainty warmup (freeze σ for first N epochs)
+uncertainty_warmup_epochs: 5
+
+optim:
+  optimizer: Adam
+  init_lr: 0.0001
+  weight_decay: 1e-6
+
+model_cgcnn:
+  atom_fea_len: 64
+  h_fea_len: 512
+  n_conv: 3
+  n_h: 1
+  drop_ratio: 0.1
+
+graph_dataset:
+  root_dir: /home/shw/ml/train_dataset/cif
+  max_num_nbr: 12
+  radius: 8
+  dmin: 0
+  step: 0.2
+  random_seed: 666
+
+dataloader:
+  val_ratio: 0.05
+  num_workers: 8
+
+loss:
+  temperature: 0.07
+  learnable_temp: true
+  coord_beta: 0.1
+  ot_epsilon: 0.1
+  ot_max_iter: 50
+
+  # Task loss weights
+  lambda_atom_mlm: 1.0
+  lambda_coord: 0.1          # auxiliary, keep small
+  lambda_node: 0.0            # OT expensive, off by default
+
+  # VICReg collapse prevention
+  lambda_vicreg: 0.1
+  vicreg_var_gamma: 1.0       # target std per dimension
+  vicreg_cov_lambda: 0.005    # off-diagonal penalty
+
+  # BYOL asymmetric predictor
+  lambda_byol: 1.0
+
+  # Uncertainty weighting
+  use_uncertainty_weighting: true
+  uncertainty_init_log_sigma: 0.0   # σ_init = e^0 = 1
+
+Transformer:
+  ntoken: 4021
+  d_model: 512
+  nhead: 8
+  d_hid: 512
+  nlayers: 6
+  dropout: 0.1
